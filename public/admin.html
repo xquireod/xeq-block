@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Blockchain Admin Dashboard</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0b0f19;
+            color: #e5e7eb;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header,
+        footer {
+            background: #111827;
+            padding: 1rem 2rem;
+        }
+
+        header h1,
+        footer {
+            color: #3b82f6;
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+        }
+
+        input,
+        select {
+            background: #0f172a;
+            color: #e5e7eb;
+            border: 1px solid #1e293b;
+        }
+
+        button {
+            transition: 0.2s;
+        }
+
+        table th,
+        table td {
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .scrollable {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- LOGIN MODAL -->
+    <div id="loginModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+        <div class="glass p-6 rounded-2xl w-full max-w-md text-center">
+            <h2 class="text-2xl font-bold text-blue-400 mb-4">Admin Login</h2>
+            <input id="adminUser" placeholder="Username" class="w-full mb-3 p-2 rounded" type="text">
+            <input id="adminPass" placeholder="Password" class="w-full mb-4 p-2 rounded" type="password">
+            <button id="loginBtn"
+                class="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold">Login</button>
+            <p id="loginError" class="text-red-500 mt-2 text-sm hidden">Invalid credentials</p>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold">Blockchain Admin Dashboard</h1>
+        <span class="text-sm text-slate-400">Welcome, Admin</span>
+    </header>
+
+    <!-- MAIN DASHBOARD -->
+    <main id="dashboard" class="hidden flex flex-col gap-8">
+        <!-- CONFIG -->
+        <section class="glass p-6 rounded-2xl">
+            <h2 class="text-xl font-semibold mb-4">Wallet & Fee Configuration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <p class="font-semibold mb-1">Wallet Address</p>
+                    <input id="walletAddress" class="w-full p-2 rounded">
+                </div>
+                <div>
+                    <p class="font-semibold mb-1">Balance</p>
+                    <input id="balance" class="w-full p-2 rounded">
+                </div>
+                <div>
+                    <p class="font-semibold mb-1">Standard Fee ($)</p>
+                    <input id="standardFee" type="number" class="w-full p-2 rounded mb-2">
+                    <p class="font-semibold mb-1">Priority Fee ($)</p>
+                    <input id="priorityFee" type="number" class="w-full p-2 rounded">
+                </div>
+            </div>
+            <button id="saveConfig" class="mt-4 bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-xl font-semibold">Save
+                Config</button>
+            <p id="saveMessage" class="text-green-500 mt-2 hidden">Config saved!</p>
+        </section>
+
+        <!-- PAYMENTS -->
+        <section class="glass p-6 rounded-2xl">
+            <h2 class="text-xl font-semibold mb-4">User Payments</h2>
+            <div class="scrollable overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-3">User UID</th>
+                            <th class="py-2 px-3">Type</th>
+                            <th class="py-2 px-3">Proof</th>
+                            <th class="py-2 px-3">Status</th>
+                            <th class="py-2 px-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="text-center text-sm text-slate-400">
+        &copy; 2026 Blockchain Admin Demo. All rights reserved.
+    </footer>
+
+    <script>
+        const loginModal = document.getElementById("loginModal");
+        const loginBtn = document.getElementById("loginBtn");
+        const loginError = document.getElementById("loginError");
+        const dashboard = document.getElementById("dashboard");
+
+        // ADMIN LOGIN
+        loginBtn.addEventListener("click", async () => {
+            const username = document.getElementById("adminUser").value;
+            const password = document.getElementById("adminPass").value;
+
+            const res = await fetch("/api/admin/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                loginModal.remove();
+                dashboard.classList.remove("hidden");
+                loadConfig();
+                loadPayments();
+            } else {
+                loginError.classList.remove("hidden");
+            }
+        });
+
+        async function loadConfig() {
+            const res = await fetch("/api/config");
+            const cfg = await res.json();
+            document.getElementById("walletAddress").value = cfg.walletAddress;
+            document.getElementById("standardFee").value = cfg.standardFee;
+            document.getElementById("priorityFee").value = cfg.priorityFee;
+            document.getElementById("balance").value = cfg.balance;
+        }
+
+        document.getElementById("saveConfig").addEventListener("click", async () => {
+            const cfg = {
+                walletAddress: document.getElementById("walletAddress").value,
+                balance: document.getElementById("balance").value,
+                standardFee: document.getElementById("standardFee").value,
+                priorityFee: document.getElementById("priorityFee").value
+            };
+            await fetch("/api/admin/decision", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(cfg)
+            });
+            const msg = document.getElementById("saveMessage");
+            msg.classList.remove("hidden");
+            setTimeout(() => msg.classList.add("hidden"), 2000);
+        });
+
+        async function loadPayments() {
+            const res = await fetch("/api/admin/payments");
+            const payments = await res.json();
+            const tbody = document.getElementById("paymentsBody");
+            tbody.innerHTML = "";
+
+            payments.forEach(p => {
+                const tr = document.createElement("tr");
+                tr.className = "border-b border-gray-700";
+                tr.innerHTML = `
+                    <td class="py-2 px-3">${p.uid}</td>
+                    <td class="py-2 px-3">${p.type}</td>
+                    <td class="py-2 px-3">${p.proof ? `<a href="/uploads/${p.proof}" target="_blank" class="text-blue-400 underline">View</a>` : "-"}</td>
+                    <td class="py-2 px-3">${p.status}</td>
+                    <td class="py-2 px-3 flex gap-2">
+                        <button class="bg-green-600 hover:bg-green-700 px-2 py-1 rounded" onclick="decide('${p.id}', 'approved')">Approve</button>
+                        <button class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded" onclick="decide('${p.id}', 'rejected')">Reject</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function decide(id, status) {
+            const walletAddress = document.getElementById("walletAddress").value;
+            const balance = document.getElementById("balance").value;
+            const standardFee = document.getElementById("standardFee").value;
+            const priorityFee = document.getElementById("priorityFee").value;
+
+            await fetch("/api/admin/decision", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, status, walletAddress, balance, standardFee, priorityFee })
+            });
+            loadPayments();
+            loadConfig();
+        }
+    </script>
+
+</body>
+
+</html>

