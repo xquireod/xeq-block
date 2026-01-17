@@ -143,7 +143,7 @@ app.post("/api/support", (req, res) => {
 // Delete support message
 app.delete("/api/support/:id", (req, res) => {
   const id = Number(req.params.id);
-  const msgs = read(SUPPORT_FILE).filter(m => m.id !== id);
+  const msgs = readJSON(SUPPORT_FILE).filter(m => m.id !== id);
   writeJSON(SUPPORT_FILE, msgs);
   res.json({ ok: true });
 });
