@@ -119,7 +119,7 @@ app.get("/api/status/:uid", (req, res) => {
 
 // Get all support messages (ascending order)
 app.get("/api/support", (req, res) => {
-  const msgs = read(SUPPORT_FILE);
+  const msgs = readJSON(SUPPORT_FILE);
   msgs.sort((a, b) => a.createdAt - b.createdAt);
   res.json(msgs);
 });
