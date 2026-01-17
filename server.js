@@ -129,14 +129,14 @@ app.post("/api/support", (req, res) => {
   const { text } = req.body;
   if (!text) return res.status(400).json({ error: "Text required" });
 
-  const msgs = read(SUPPORT_FILE);
+  const msgs = readJSON(SUPPORT_FILE);
   msgs.push({
     id: Date.now(),
     text,
     createdAt: Date.now()
   });
 
-  write(SUPPORT_FILE, msgs);
+  writeJSON(SUPPORT_FILE, msgs);
   res.json({ ok: true });
 });
 
@@ -144,7 +144,7 @@ app.post("/api/support", (req, res) => {
 app.delete("/api/support/:id", (req, res) => {
   const id = Number(req.params.id);
   const msgs = read(SUPPORT_FILE).filter(m => m.id !== id);
-  write(SUPPORT_FILE, msgs);
+  writeJSON(SUPPORT_FILE, msgs);
   res.json({ ok: true });
 });
 
