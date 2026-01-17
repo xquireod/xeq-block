@@ -21,6 +21,8 @@ const upload = multer({ dest: "uploads/" });
 const USERS_FILE = "./data/users.json";
 const PAYMENTS_FILE = "./data/payments.json";
 const CONFIG_FILE = "./data/config.json";
+const SUPPORT_FILE = "./data/support_messages.json";
+
 
 /* INIT */
 if (!fs.existsSync("./data")) fs.mkdirSync("./data");
@@ -28,6 +30,8 @@ if (!fs.existsSync("./uploads")) fs.mkdirSync("./uploads");
 
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
 if (!fs.existsSync(PAYMENTS_FILE)) fs.writeFileSync(PAYMENTS_FILE, "[]");
+if (!fs.existsSync(PAYMENTS_FILE)) fs.writeFileSync(SUPPORT_FILE, "[]");
+
 if (!fs.existsSync(CONFIG_FILE))
   fs.writeFileSync(CONFIG_FILE, JSON.stringify({
     walletAddress: "demoWallet123",
@@ -84,7 +88,7 @@ app.get("/api/config", (req, res) => {
 ========================= */
 app.post("/api/pay", upload.single("proof"), (req, res) => {
   const { uid, type } = req.body;
-  console.log({uid, type, b:req.body})
+  console.log({ uid, type, b: req.body })
   if (!uid || !type || !req.file) return res.status(400).json({ error: "Invalid request" });
 
   const payments = readJSON(PAYMENTS_FILE);
@@ -112,6 +116,38 @@ app.get("/api/status/:uid", (req, res) => {
   );
   res.json({ approved });
 });
+
+// Get all support messages (ascending order)
+app.get("/api/support", (req, res) => {
+  const msgs = read(SUPPORT_FILE);
+  msgs.sort((a, b) => a.createdAt - b.createdAt);
+  res.json(msgs);
+});
+
+// Add support message
+app.post("/api/support", (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ error: "Text required" });
+
+  const msgs = read(SUPPORT_FILE);
+  msgs.push({
+    id: Date.now(),
+    text,
+    createdAt: Date.now()
+  });
+
+  write(SUPPORT_FILE, msgs);
+  res.json({ ok: true });
+});
+
+// Delete support message
+app.delete("/api/support/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const msgs = read(SUPPORT_FILE).filter(m => m.id !== id);
+  write(SUPPORT_FILE, msgs);
+  res.json({ ok: true });
+});
+
 
 /* =========================
    ADMIN LOGIN

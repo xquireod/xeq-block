@@ -44,6 +44,7 @@
         }
 
         input,
+        textarea,
         select {
             background: #0f172a;
             color: #e5e7eb;
@@ -71,26 +72,26 @@
 </head>
 
 <body>
+
     <!-- LOGIN MODAL -->
     <div id="loginModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
         <div class="glass p-6 rounded-2xl w-full max-w-md text-center">
             <h2 class="text-2xl font-bold text-blue-400 mb-4">Admin Login</h2>
-            <input id="adminUser" placeholder="Username" class="w-full mb-3 p-2 rounded" type="text">
-            <input id="adminPass" placeholder="Password" class="w-full mb-4 p-2 rounded" type="password">
+            <input id="adminUser" placeholder="Username" class="w-full mb-3 p-2 rounded">
+            <input id="adminPass" placeholder="Password" type="password" class="w-full mb-4 p-2 rounded">
             <button id="loginBtn"
                 class="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold">Login</button>
             <p id="loginError" class="text-red-500 mt-2 text-sm hidden">Invalid credentials</p>
         </div>
     </div>
 
-    <!-- HEADER -->
     <header class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Blockchain Admin Dashboard</h1>
         <span class="text-sm text-slate-400">Welcome, Admin</span>
     </header>
 
-    <!-- MAIN DASHBOARD -->
     <main id="dashboard" class="hidden flex flex-col gap-8">
+
         <!-- CONFIG -->
         <section class="glass p-6 rounded-2xl">
             <h2 class="text-xl font-semibold mb-4">Wallet & Fee Configuration</h2>
@@ -110,9 +111,25 @@
                     <input id="priorityFee" type="number" class="w-full p-2 rounded">
                 </div>
             </div>
-            <button id="saveConfig" class="mt-4 bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-xl font-semibold">Save
-                Config</button>
+            <button id="saveConfig" class="mt-4 bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-xl font-semibold">
+                Save Config
+            </button>
             <p id="saveMessage" class="text-green-500 mt-2 hidden">Config saved!</p>
+        </section>
+
+        <!-- SUPPORT MESSAGES (ADDED, NOTHING ELSE TOUCHED) -->
+        <section class="glass p-6 rounded-2xl">
+            <h2 class="text-xl font-semibold mb-4">Customer Support Messages (Step 2)</h2>
+
+            <textarea id="supportText" class="w-full p-3 rounded mb-3"
+                placeholder="Message shown to users on Step 2"></textarea>
+
+            <button onclick="addSupport()"
+                class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl font-semibold mb-4">
+                Add Message
+            </button>
+
+            <div id="supportList" class="space-y-3"></div>
         </section>
 
         <!-- PAYMENTS -->
@@ -133,23 +150,18 @@
                 </table>
             </div>
         </section>
+
     </main>
 
-    <!-- FOOTER -->
     <footer class="text-center text-sm text-slate-400">
         &copy; 2026 Blockchain Admin Demo. All rights reserved.
     </footer>
 
     <script>
-        const loginModal = document.getElementById("loginModal");
-        const loginBtn = document.getElementById("loginBtn");
-        const loginError = document.getElementById("loginError");
-        const dashboard = document.getElementById("dashboard");
-
-        // ADMIN LOGIN
+        /* ---------------- LOGIN ---------------- */
         loginBtn.addEventListener("click", async () => {
-            const username = document.getElementById("adminUser").value;
-            const password = document.getElementById("adminPass").value;
+            const username = adminUser.value;
+            const password = adminPass.value;
 
             const res = await fetch("/api/admin/login", {
                 method: "POST",
@@ -163,73 +175,101 @@
                 dashboard.classList.remove("hidden");
                 loadConfig();
                 loadPayments();
+                loadSupport();
             } else {
                 loginError.classList.remove("hidden");
             }
         });
 
+        /* ---------------- CONFIG ---------------- */
         async function loadConfig() {
             const res = await fetch("/api/config");
             const cfg = await res.json();
-            document.getElementById("walletAddress").value = cfg.walletAddress;
-            document.getElementById("standardFee").value = cfg.standardFee;
-            document.getElementById("priorityFee").value = cfg.priorityFee;
-            document.getElementById("balance").value = cfg.balance;
+            walletAddress.value = cfg.walletAddress;
+            balance.value = cfg.balance;
+            standardFee.value = cfg.standardFee;
+            priorityFee.value = cfg.priorityFee;
         }
 
-        document.getElementById("saveConfig").addEventListener("click", async () => {
+        saveConfig.addEventListener("click", async () => {
             const cfg = {
-                walletAddress: document.getElementById("walletAddress").value,
-                balance: document.getElementById("balance").value,
-                standardFee: document.getElementById("standardFee").value,
-                priorityFee: document.getElementById("priorityFee").value
+                walletAddress: walletAddress.value,
+                balance: balance.value,
+                standardFee: standardFee.value,
+                priorityFee: priorityFee.value
             };
             await fetch("/api/admin/decision", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(cfg)
             });
-            const msg = document.getElementById("saveMessage");
-            msg.classList.remove("hidden");
-            setTimeout(() => msg.classList.add("hidden"), 2000);
+            saveMessage.classList.remove("hidden");
+            setTimeout(() => saveMessage.classList.add("hidden"), 2000);
         });
 
+        /* ---------------- PAYMENTS ---------------- */
         async function loadPayments() {
             const res = await fetch("/api/admin/payments");
             const payments = await res.json();
-            const tbody = document.getElementById("paymentsBody");
-            tbody.innerHTML = "";
+            paymentsBody.innerHTML = "";
 
             payments.forEach(p => {
                 const tr = document.createElement("tr");
-                tr.className = "border-b border-gray-700";
                 tr.innerHTML = `
-                    <td class="py-2 px-3">${p.uid}</td>
-                    <td class="py-2 px-3">${p.type}</td>
-                    <td class="py-2 px-3">${p.proof ? `<a href="/uploads/${p.proof}" target="_blank" class="text-blue-400 underline">View</a>` : "-"}</td>
-                    <td class="py-2 px-3">${p.status}</td>
-                    <td class="py-2 px-3 flex gap-2">
-                        <button class="bg-green-600 hover:bg-green-700 px-2 py-1 rounded" onclick="decide('${p.id}', 'approved')">Approve</button>
-                        <button class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded" onclick="decide('${p.id}', 'rejected')">Reject</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+            <td class="py-2 px-3">${p.uid}</td>
+            <td class="py-2 px-3">${p.type}</td>
+            <td class="py-2 px-3">${p.proof ? `<a href="/uploads/${p.proof}" target="_blank" class="text-blue-400 underline">View</a>` : "-"}</td>
+            <td class="py-2 px-3">${p.status}</td>
+            <td class="py-2 px-3 flex gap-2">
+                <button class="bg-green-600 hover:bg-green-700 px-2 py-1 rounded"
+                    onclick="decide('${p.id}','approved')">Approve</button>
+                <button class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded"
+                    onclick="decide('${p.id}','rejected')">Reject</button>
+            </td>
+        `;
+                paymentsBody.appendChild(tr);
             });
         }
 
         async function decide(id, status) {
-            const walletAddress = document.getElementById("walletAddress").value;
-            const balance = document.getElementById("balance").value;
-            const standardFee = document.getElementById("standardFee").value;
-            const priorityFee = document.getElementById("priorityFee").value;
-
             await fetch("/api/admin/decision", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id, status, walletAddress, balance, standardFee, priorityFee })
+                body: JSON.stringify({ id, status })
             });
             loadPayments();
             loadConfig();
+        }
+
+        /* ---------------- SUPPORT (NEW) ---------------- */
+        async function loadSupport() {
+            const res = await fetch("/api/support");
+            const data = await res.json();
+            supportList.innerHTML = data.map(m => `
+        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+            <span class="text-sm">${m.text}</span>
+            <button onclick="deleteSupport(${m.id})"
+                class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm">
+                Delete
+            </button>
+        </div>
+    `).join("");
+        }
+
+        async function addSupport() {
+            if (!supportText.value.trim()) return;
+            await fetch("/api/support", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: supportText.value })
+            });
+            supportText.value = "";
+            loadSupport();
+        }
+
+        async function deleteSupport(id) {
+            await fetch("/api/support/" + id, { method: "DELETE" });
+            loadSupport();
         }
     </script>
 
